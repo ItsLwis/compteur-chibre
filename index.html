@@ -284,7 +284,7 @@
   const annonce = byId('annonce'), aChips = byId('aChips'), aTitle = byId('aTitle');
   byId('aClose').addEventListener('click', ()=> annonce.classList.remove('show'));
   function openAnnonce(side){
-    aTitle.textContent = side==='A' ? 'Annonce Équipe A' : 'Annonce Équipe B';
+    aTitle.textContent = side==='A' ? 'Annonce - Équipe A' : 'Annonce - Équipe B';
     aChips.innerHTML='';
     [20,50,100,150,200,250,300].forEach(v=>{
       const b=document.createElement('button'); b.className='chip'; b.textContent='+'+v;
