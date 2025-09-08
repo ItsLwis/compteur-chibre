@@ -34,7 +34,8 @@
     .target.win{background:var(--accent);border-color:var(--accent);color:#000}
 
     .ecartA,.roundCount{position:absolute;font-size:12px;color:#fff;opacity:.95;font-style:italic}
-    .ecartA{left:14px;top:46%}
+    .ecartA{left:14px;top:46%;}
+    .remainA{position:absolute;left:14px;top:46%;font-size:12px;font-style:italic}
     .roundCount{right:14px;top:46%;text-align:right}
 
     .stackA{position:absolute;left:10%;top:18%;display:flex;flex-direction:column;gap:12px;align-items:center}
@@ -69,7 +70,17 @@
     .bubble{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;margin:2px}
     .bubble.points{background:#ffffff;color:#000;border:1px solid #e5e7eb}
     .bubble.annonce{background:#0a2010;color:#a7f3d0;border:1px solid #1a3b2b}
-  </style>
+  
+    
+
+    .remainB{position:absolute;left:14px;top:54%;font-size:12px;font-style:italic}
+
+    
+
+    .remainTop{position:absolute;left:50%;transform:translateX(-50%);top: calc(10% - 36px);font-size:12px;font-style:italic}
+
+    .remainBottom{position:absolute;left:50%;transform:translateX(-50%);bottom: calc(10% - 36px);font-size:12px;font-style:italic}
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -91,7 +102,7 @@
       <div id="target" class="target">1000</div>
 
       <div id="ecartA" class="ecartA">Écart : 0</div>
-      <div id="roundCount" class="roundCount">Manche : 0</div>
+      <div id="roundCount" class="roundCount">Manche : 1</div>
 
       <div class="stackA">
         <div class="teamlabel">TEAM 1</div>
@@ -105,7 +116,9 @@
       </div>
 
       <div id="scoreA" class="scoreTag">0</div>
+      <div id="remainTop" class="remainTop">(-0)</div>
       <div id="scoreB" class="scoreTag">0</div>
+      <div id="remainBottom" class="remainBottom">(-0)</div>
     </div>
   </div>
 
@@ -212,7 +225,10 @@
   const gTop = byId('gTop'), gBot = byId('gBot');
   const scoreAEl = byId('scoreA'), scoreBEl = byId('scoreB');
   const targetEl = byId('target');
-  const ecartA = byId('ecartA'), roundCount = byId('roundCount');
+  const ecartA = byId('ecartA');
+  const remainTop = byId('remainTop');
+  const remainBottom = byId('remainBottom');
+  const roundCount = byId('roundCount');
 
   function completedRounds(){ return state.rounds.filter(r => r && ((r.trA||0)>0 || (r.trB||0)>0)).length; }
 
@@ -227,9 +243,13 @@
     gTop.style.height = (aPct*half) + '%';
     gBot.style.height = (bPct*half) + '%';
 
-    const delta = state.scoreA - state.scoreB;
-    ecartA.textContent = 'Écart : ' + delta;
-    roundCount.textContent = 'Manche : ' + completedRounds();
+    const remA = Math.max(0, state.target - state.scoreA);
+    const remB = Math.max(0, state.target - state.scoreB);
+    if (remainTop) remainTop.textContent = '(-' + remA + ')';
+    if (remainBottom) remainBottom.textContent = '(-' + remB + ')';
+    const ecart = Math.abs(state.scoreA - state.scoreB);
+    if (ecartA) ecartA.textContent = 'Écart : ' + ecart;
+    roundCount.textContent = 'Manche : ' + (completedRounds()+1);
 
     const win = (state.scoreA >= state.target) || (state.scoreB >= state.target);
     targetEl.classList.toggle('win', win);
@@ -246,8 +266,8 @@
   document.querySelectorAll('[data-act]').forEach(b=>{
     b.addEventListener('click', ()=>{
       const act = b.getAttribute('data-act');
-      if (act==='plusA') return openKeypad('Ajouter des points - Équipe A', 0, v=>addTricks('A', v));
-      if (act==='plusB') return openKeypad('Ajouter des points - Équipe B', 0, v=>addTricks('B', v));
+      if (act==='plusA') return openKeypad('Ajouter des points - Équipe A', 0, v=>addTricks('A', v), {max: state.roundTotal, enforceMsg:true});
+      if (act==='plusB') return openKeypad('Ajouter des points - Équipe B', 0, v=>addTricks('B', v), {max: state.roundTotal, enforceMsg:true});
       if (act==='annonceA') return openAnnonce('A');
       if (act==='annonceB') return openAnnonce('B');
     });
@@ -263,7 +283,7 @@
   function addTricks(side, val){
     let n = parseInt(val,10)||0;
     if (n<0) n=0;
-    if (n>state.roundTotal) n = state.roundTotal; // cap 157
+    if (n>state.roundTotal) { n = state.roundTotal; } // sécurité côté logique
     const other = Math.max(0, state.roundTotal - n);
     ensureRound();
     const r = state.rounds[state.rounds.length-1];
@@ -352,17 +372,21 @@
 
   // Keypad
   const k = byId('keypad'); const kDisp = byId('kDisp'); const kTitle = byId('kTitle');
-  let kResolve=null;
-  function openKeypad(title, initial, onOk){
-    kTitle.textContent = title; 
-    const init = Math.max(0, Math.min(157, initial||0));
-    kDisp.textContent = String(init);
-    k.classList.add('show'); kResolve = onOk;
-  }
-  byId('kCancel').addEventListener('click', ()=>{ k.classList.remove('show'); kResolve=null; });
+  let kResolve=null; let kMax=null; let kEnforceMsg=false;
+function openKeypad(title, initial, onOk, opts){
+  opts = opts||{}; kMax = (typeof opts.max==='number') ? opts.max : null;
+  kEnforceMsg = !!opts.enforceMsg;
+  kTitle.textContent = title;
+  let init = parseInt(initial||0,10); if(isNaN(init)) init=0;
+  if (kMax!=null && init>kMax) init = 0;
+  if (init<0) init = 0;
+  kDisp.textContent = String(init);
+  k.classList.add('show'); kResolve = onOk;
+}
+byId('kCancel').addEventListener('click', ()=>{ k.classList.remove('show'); kResolve=null; });
   byId('kOk').addEventListener('click', ()=>{ 
     let v=parseInt(kDisp.textContent,10)||0;
-    if (v<0) v=0; if (v>157) v=157;
+    if (v<0) v=0; 
     k.classList.remove('show'); if(kResolve)kResolve(v); kResolve=null; 
   });
   k.addEventListener('click', (e)=>{ if(e.target===k){ k.classList.remove('show'); kResolve=null; }});
@@ -373,11 +397,16 @@
       if(t==='C'){ kDisp.textContent='0'; return; }
       if(t==='⌫'){ kDisp.textContent = cur.length>1 ? cur.slice(0,-1) : '0'; return; }
       if(cur==='0') cur='';
-      const next=(cur+t).slice(0,3);
+      const next = (kMax!=null ? (cur+t).slice(0, String(kMax).length) : (cur+t));
       let num=parseInt(next||'0',10);
-      if(isNaN(num)) num=0;
-      if(num>157) num=157; if(num<0) num=0;
-      kDisp.textContent=String(num);
+if(isNaN(num)) num=0;
+if(num<0) num=0;
+if(kMax!=null && num>kMax){
+  if (kEnforceMsg) alert('La valeur indiquée est trop élevée (max '+kMax+'). Veuillez ressaisir.');
+  kDisp.textContent='';
+  return;
+}
+kDisp.textContent=String(num);
     });
   });
 
