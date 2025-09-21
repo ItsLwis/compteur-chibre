@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Compteur Chibre</title>
+  <meta name="description" content="Compteur de points pour le Jass/Chibre. Hors-ligne, installable, simple.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <style>
+    :root{
+      --bg:#000; --ink:#fff; --line:#2a2a2a; --center:#fff; --accent:#22c55e;
+      --card:#111; --card2:#171717; --danger:#ef4444;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100svh;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Helvetica,Arial,sans-serif}
+    .wrap{max-width:520px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom))}
+
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+    .brand h1{margin:0;font-size:18px}
+    .actions{display:flex;gap:8px}
+    .iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#0e0e0e;color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+    .iconbtn:active{filter:brightness(.8)}
+    .iconbtn.danger{background:#180c0c;border-color:#3a1717}
+
+    /* Feedback gris à l’appui pour TOUT */
+    .btn:active,.iconbtn:active,.plusbtn:active,.key:active{filter:brightness(0.75)}
+
+    /* ====== Plateau ====== */
+    .board{position:relative;border:1px solid #1a1a1a;border-radius:14px;padding:14px;min-height:72vh;background:linear-gradient(180deg,#0a0a0a,#0f0f0f)}
+    .centerline{position:absolute;left:50%;top:10%;bottom:10%;transform:translateX(-50%);width:6px;background:var(--center);border-radius:3px}
+    .midmark{position:absolute;left:10%;right:10%;top:50%;height:1px;background:var(--line)}
+    .gauge{position:absolute;left:50%;transform:translateX(-50%);width:6px;background:var(--accent);border-radius:3px}
+    .gauge.top{top:10%;height:0}
+    .gauge.bottom{bottom:10%;height:0}
+
+    /* ====== OBJECTIF (taille d’ORIGINE) ====== */
+    .target{
+      font-variant-numeric:tabular-nums;
+      width:120px;
+      text-align:center;
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      background:#0e0e0e;border-radius:50px;
+      padding:10px 16px;            /* valeurs d'origine */
+      border:1px solid #2a2a2a;font-weight:800;cursor:pointer;
+      font-size:22px;               /* valeurs d'origine */
+    }
+    .target.win{background:var(--accent);border-color:var(--accent);color:#000}
+
+    .ecartA,.roundCount{position:absolute;font-size:12px;opacity:.95;font-style:italic}
+    .ecartA{left:14px;top:46%;}
+    .roundCount{right:14px;top:46%;text-align:right}
+
+    .stackA{position:absolute;left:10%;top:18%;display:flex;flex-direction:column;gap:12px;align-items:center}
+    .stackB{position:absolute;right:10%;bottom:18%;display:flex;flex-direction:column;gap:12px;align-items:center}
+    .teamlabel{font-style:italic;font-weight:800;opacity:.95}
+    .plusbtn{border:1px solid #2a2a2a;background:#0e0e0e;color:#fff;border-radius:50%;width:58px;height:58px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900}
+    .btn{border:1px solid #2a2a2a;background:#0e0e0e;color:#fff;border-radius:12px;padding:8px 14px;cursor:pointer;font-weight:600}
+
+    .scoreTag{position:absolute;left:50%;transform:translateX(-50%);background:#0e0e0e;border-radius:999px;padding:6px 10px;border:1px solid #e5e7eb;font-weight:700;min-width:70px;text-align:center}
+    #scoreA{top: calc(10% - 12px);}
+    #scoreB{bottom: calc(10% - 12px);}
+    .remainTop{position:absolute;left:50%;transform:translateX(-50%);top: calc(10% - 34px);font-size:12px;font-style:italic;opacity:.9}
+    .remainBottom{position:absolute;left:50%;transform:translateX(-50%);bottom: calc(10% - 34px);font-size:12px;font-style:italic;opacity:.9}
+
+    /* ====== Modales ====== */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:14px;z-index:30}
+    .modal.show{display:flex}
+    .sheet{background:var(--card);border:1px solid #333;border-radius:16px;max-width:520px;width:100%}
+    .sheet header{padding:12px 14px;border-bottom:1px solid #262626}
+    .sheet h3{margin:0;font-size:16px;text-align:center}
+    .sheet .content{padding:14px}
+
+    /* ====== Clavier (keypad) ====== */
+    .display{font-size:46px;text-align:center;margin:8px 0 12px;font-weight:800;letter-spacing:1px}
+    .hint{font-size:12px;text-align:center;opacity:.75;margin:4px 0 10px}
+    .keypad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .key{background:#0b0b0b;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:16px 0;font-size:22px;font-weight:800;cursor:pointer;user-select:none}
+    .bar{display:flex;gap:8px;justify-content:space-between;margin-top:12px}
+    .bar .btn{flex:1}
+    .btn.match{background:#1f2937;border-color:#374151}
+    .display.warn{outline:2px solid var(--danger); border-radius:10px}
+
+    /* ====== Confirmation points / match ====== */
+    .confirmGrid{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+    .sideBox{background:#0e0e0e;border:1px solid #2a2a2a;border-radius:12px;padding:10px;text-align:center}
+    .sideBox .team{font-weight:700;opacity:.9;margin-bottom:4px}
+    .sideBox .big{font-size:28px;font-weight:900}
+    .sideBox .ann{font-size:12px;opacity:.85;margin-top:2px}
+    .vs{opacity:.6;font-weight:700}
+
+    /* ====== Confirmation d’annonce ====== */
+    .centerBox{max-width:260px;margin:0 auto}
+
+    /* ====== Historique ====== */
+    .historyHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .historyHeader .team{font-weight:800;opacity:.95}
+    #hList{display:flex;flex-direction:column;gap:10px}
+    .manche-card{border:1px solid #333;border-radius:10px;padding:10px 12px;background:#1a1a1a;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+    .manche-title{text-align:center;font-weight:800;opacity:.95}
+    .side{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:18px;font-weight:800}
+    .badge{font-size:12px;opacity:.85;border:1px solid #2e6f2e;border-radius:999px;padding:2px 6px}
+    .manche-card.disabled{background:#2a0000;border-color:#5a0000;color:#ffbdbd;text-decoration:line-through}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><h1>Compteur Chibre</h1></div>
+      <div class="actions">
+        <button class="iconbtn" id="settingsBtn" title="Paramètres">⚙️</button>
+        <button class="iconbtn" id="historyBtn" title="Historique">🕘</button>
+        <button class="iconbtn danger" id="resetBtn" title="Tout réinitialiser">🗑️</button>
+      </div>
+    </header>
+
+    <!-- ====== Plateau ====== -->
+    <div class="board" id="board">
+      <div class="centerline"></div>
+      <div id="gTop" class="gauge top"></div>
+      <div id="gBot" class="gauge bottom"></div>
+      <div class="midmark"></div>
+
+      <div id="target" class="target">1000</div>
+
+      <div id="ecartA" class="ecartA">Écart : 0</div>
+      <div id="roundCount" class="roundCount">Manche : 1</div>
+
+      <div class="stackA">
+        <div class="teamlabel" id="teamAName" contenteditable="true">TEAM 1</div>
+        <button class="plusbtn" data-act="plusA">+</button>
+        <button class="btn" data-act="annonceA">Annonce</button>
+      </div>
+      <div class="stackB">
+        <button class="btn" data-act="annonceB">Annonce</button>
+        <button class="plusbtn" data-act="plusB">+</button>
+        <div class="teamlabel" id="teamBName" contenteditable="true">TEAM 2</div>
+      </div>
+
+      <div id="scoreA" class="scoreTag">0</div>
+      <div id="remainTop" class="remainTop">(-0)</div>
+      <div id="scoreB" class="scoreTag">0</div>
+      <div id="remainBottom" class="remainBottom">(-0)</div>
+    </div>
+  </div>
+
+  <!-- ====== Modale Annonce ====== -->
+  <div class="modal" id="annonceModal">
+    <div class="sheet">
+      <header><h3 id="aTitle">Annonce</h3></header>
+      <div class="content" style="text-align:center">
+        <div id="aGaugeVal" style="font-size:42px;margin:8px 0">10</div>
+        <input id="aRange" type="range" min="10" max="300" step="10" value="10" style="width:100%">
+        <div class="bar">
+          <button class="btn" id="aMinus">-10</button>
+          <button class="btn" id="aPlus">+10</button>
+          <button class="btn" id="aClose">Annuler</button>
+          <button class="btn" id="aOk">Valider</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modale Clavier ====== -->
+  <div class="modal" id="keypad">
+    <div class="sheet">
+      <header><h3 id="kTitle">Ajouter des points</h3></header>
+      <div class="content">
+        <div class="display" id="kDisp">0</div>
+        <div class="hint" id="kHint">Règle : maximum <strong>157</strong> par manche</div>
+        <div class="keypad-grid" id="kGrid">
+          <button class="key">1</button><button class="key">2</button><button class="key">3</button>
+          <button class="key">4</button><button class="key">5</button><button class="key">6</button>
+          <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+          <button class="key" data-k="C">C</button><button class="key">0</button><button class="key" data-k="B">⌫</button>
+        </div>
+        <div class="bar">
+          <button class="btn match" id="kMatch">Match</button>
+          <button class="btn" id="kCancel">Annuler</button>
+          <button class="btn" id="kOk">Valider</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modale Confirmation Points / Match ====== -->
+  <div class="modal" id="confirmPoints">
+    <div class="sheet">
+      <header><h3 id="cpTitle">Confirmer</h3></header>
+      <div class="content">
+        <div class="confirmGrid">
+          <div class="sideBox">
+            <div class="team" id="cpTeamALabel">TEAM 1</div>
+            <div class="big" id="cpPtsA">0</div>
+            <div class="ann" id="cpAnnA">+0 annonce(s)</div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="sideBox">
+            <div class="team" id="cpTeamBLabel">TEAM 2</div>
+            <div class="big" id="cpPtsB">0</div>
+            <div class="ann" id="cpAnnB">+0 annonce(s)</div>
+          </div>
+        </div>
+        <div class="bar" style="margin-top:12px">
+          <button class="btn" id="cpCancel">Annuler</button>
+          <button class="btn" id="cpOk">Valider</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modale Confirmation Annonce ====== -->
+  <div class="modal" id="confirmAnnounce">
+    <div class="sheet">
+      <header><h3>Confirmer l’annonce</h3></header>
+      <div class="content">
+        <div class="sideBox centerBox">
+          <div class="team" id="caTeam">TEAM</div>
+          <div class="big" id="caVal">+0</div>
+        </div>
+        <div class="bar" style="margin-top:12px">
+          <button class="btn" id="caCancel">Annuler</button>
+          <button class="btn" id="caOk">Valider</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modale Historique ====== -->
+  <div class="modal" id="history">
+    <div class="sheet">
+      <header><h3>Historique des manches</h3></header>
+      <div class="content">
+        <div class="historyHeader">
+          <div class="team" id="hTeamAName">TEAM 1</div>
+          <div class="team" id="hTeamBName">TEAM 2</div>
+        </div>
+        <div id="hList"></div>
+        <div class="bar" style="justify-content:flex-end"><button class="btn" id="hClose">Fermer</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modale Réinitialiser ====== -->
+  <div class="modal" id="confirmReset">
+    <div class="sheet">
+      <header><h3>Tout réinitialiser</h3></header>
+      <div class="content">
+        <p style="opacity:.9">Supprimer les scores, l’historique et vider le cache ?</p>
+        <div class="bar" style="justify-content:flex-end">
+          <button class="btn" id="crCancel">Annuler</button>
+          <button class="btn" id="crOk" style="color:var(--danger)">Tout supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Paramètres & Installation ====== -->
+  <div class="modal" id="settings">
+    <div class="sheet">
+      <header><h3>Paramètres & Installation</h3></header>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div style="font-weight:700;margin:8px 0 6px">iPhone / iPad</div>
+            <ol style="margin:0;padding-left:18px;opacity:.9">
+              <li>Ouvre le menu <em>Partager</em> (icône carré + flèche).</li>
+              <li>Choisis <em>Sur l’écran d’accueil</em>.</li>
+              <li>Valide le nom puis <em>Ajouter</em>.</li>
+            </ol>
+          </div>
+          <div>
+            <div style="font-weight:700;margin:8px 0 6px">Android (Chrome)</div>
+            <ol style="margin:0;padding-left:18px;opacity:.9">
+              <li>Ouvre le menu ⋮.</li>
+              <li>Choisis <em>Installer l’application</em> ou <em>Ajouter à l’écran d’accueil</em>.</li>
+              <li>Valide pour installer.</li>
+            </ol>
+          </div>
+        </div>
+        <div style="margin:12px 0;border-top:1px solid #262626"></div>
+        <div style="opacity:.8">Astuce : appuie sur le nom d’une équipe pour la renommer.</div>
+        <div class="bar" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="sClose">Fermer</button></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const byId = id => document.getElementById(id);
+
+  const state = {
+    target: 1000,
+    roundTotal: 157,
+    scoreA: 0,
+    scoreB: 0,
+    rounds: [],       // {num, trA, trB, annA, annB, disabled}
+    teamAName: 'TEAM 1',
+    teamBName: 'TEAM 2'
+  };
+
+  try{ const saved = localStorage.getItem('cc_state_pwa'); if(saved) Object.assign(state, JSON.parse(saved)); }catch{}
+  const save = ()=>{ try{ localStorage.setItem('cc_state_pwa', JSON.stringify(state)); }catch{} };
+
+  const gTop = byId('gTop'), gBot = byId('gBot');
+  const scoreAEl = byId('scoreA'), scoreBEl = byId('scoreB');
+  const targetEl = byId('target');
+  const remainTop = byId('remainTop'), remainBottom = byId('remainBottom');
+  const ecartA = byId('ecartA'); const roundCount = byId('roundCount');
+  const teamANameEl = byId('teamAName'); const teamBNameEl = byId('teamBName');
+  const hTeamAName = byId('hTeamAName'); const hTeamBName = byId('hTeamBName');
+
+  teamANameEl.textContent = state.teamAName;
+  teamBNameEl.textContent = state.teamBName;
+  hTeamAName.textContent = state.teamAName;
+  hTeamBName.textContent = state.teamBName;
+
+  teamANameEl.addEventListener('input', ()=>{
+    state.teamAName = teamANameEl.textContent.trim() || 'TEAM 1';
+    hTeamAName.textContent = state.teamAName; save();
+  });
+  teamBNameEl.addEventListener('input', ()=>{
+    state.teamBName = teamBNameEl.textContent.trim() || 'TEAM 2';
+    hTeamBName.textContent = state.teamBName; save();
+  });
+
+  /* Manches validées = celles qui ont des points ET ne sont pas désactivées */
+  function validatedRoundsCount(){
+    return state.rounds.filter(r => r && !r.disabled && ((r.trA||0) > 0 || (r.trB||0) > 0)).length;
+  }
+
+  function refresh(){
+    const usable = 80;
+    const aPct = Math.min(1, state.scoreA / state.target);
+    const bPct = Math.min(1, state.scoreB / state.target);
+    gTop.style.height = (aPct * usable/2) + '%';
+    gBot.style.height = (bPct * usable/2) + '%';
+
+    scoreAEl.textContent = state.scoreA;
+    scoreBEl.textContent = state.scoreB;
+    targetEl.textContent = state.target;
+
+    const remA = Math.max(0, state.target - state.scoreA);
+    const remB = Math.max(0, state.target - state.scoreB);
+    remainTop.textContent = '(-' + remA + ')';
+    remainBottom.textContent = '(-' + remB + ')';
+    ecartA.textContent = 'Écart : ' + Math.abs(state.scoreA - state.scoreB);
+
+    /* Affiche la prochaine manche = manches validées + 1 */
+    roundCount.textContent = 'Manche : ' + (validatedRoundsCount() + 1);
+
+    targetEl.classList.toggle('win', state.scoreA>=state.target || state.scoreB>=state.target);
+  }
+  window.addEventListener('resize', refresh);
+  refresh();
+
+  // N'ouvre pas de nouvelle manche sur simple annonce
+  function ensureRound(){
+    const last = state.rounds[state.rounds.length-1];
+    if (!last){
+      state.rounds.push({num: 1, trA:0, trB:0, annA:0, annB:0, disabled:false});
+      return;
+    }
+    if ((last.trA||0) > 0 || (last.trB||0) > 0){
+      state.rounds.push({num: state.rounds.length+1, trA:0, trB:0, annA:0, annB:0, disabled:false});
+    }
+  }
+  function finalizeRound(){ ensureRound(); }
+
+  // Les annonces ne s’additionnent au score que si la manche a des points
+  function recomputeTotals(){
+    state.scoreA = 0; state.scoreB = 0;
+    state.rounds.forEach(r=>{
+      if(!r || r.disabled) return;
+      const hasPoints = (r.trA||0) > 0 || (r.trB||0) > 0;
+      state.scoreA += (r.trA||0);
+      state.scoreB += (r.trB||0);
+      if(hasPoints){
+        state.scoreA += (r.annA||0);
+        state.scoreB += (r.annB||0);
+      }
+    });
+  }
+
+  document.querySelectorAll('[data-act]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const act = b.getAttribute('data-act');
+      if (act==='plusA'){ kSide='A'; return openKeypad('Ajouter des points - '+state.teamAName, 0, v=>confirmTricks('A', v), {max:state.roundTotal, showHint:true, showMatch:true}); }
+      if (act==='plusB'){ kSide='B'; return openKeypad('Ajouter des points - '+state.teamBName, 0, v=>confirmTricks('B', v), {max:state.roundTotal, showHint:true, showMatch:true}); }
+      if (act==='annonceA') return openAnnonce('A');
+      if (act==='annonceB') return openAnnonce('B');
+    });
+  });
+
+  targetEl.addEventListener('click', ()=> openKeypad(
+    'Changer l’objectif',
+    state.target,
+    v=>{
+      let n = parseInt(v,10);
+      if (isNaN(n) || n<=0) n = 1000;
+      state.target = n; save(); refresh();
+    },
+    {max:99999, showHint:false, showMatch:false} // ← pas d’indice 157 ni bouton Match ici
+  ));
+
+  /* Confirmation points / match */
+  const cpModal = byId('confirmPoints');
+  const cpTitle = byId('cpTitle');
+  const cpTeamALabel = byId('cpTeamALabel'), cpTeamBLabel = byId('cpTeamBLabel');
+  const cpPtsA = byId('cpPtsA'), cpPtsB = byId('cpPtsB');
+  const cpAnnA = byId('cpAnnA'), cpAnnB = byId('cpAnnB');
+  let pendingApply = null;
+
+  function openConfirm(side, n, mode){ // 'points' | 'match'
+    ensureRound();
+    const r = state.rounds[state.rounds.length-1];
+
+    const ptsA = (mode==='match') ? (side==='A' ? 257 : 0) : (side==='A' ? n : (state.roundTotal - n));
+    const ptsB = (mode==='match') ? (side==='B' ? 257 : 0) : (side==='B' ? n : (state.roundTotal - n));
+
+    cpTitle.textContent = (mode==='match') ? 'Confirmer le MATCH' : 'Confirmer les points';
+    cpTeamALabel.textContent = state.teamAName;
+    cpTeamBLabel.textContent = state.teamBName;
+    cpPtsA.textContent = ptsA;
+    cpPtsB.textContent = ptsB;
+    cpAnnA.textContent = '+' + (r.annA||0) + ' annonce(s)';
+    cpAnnB.textContent = '+' + (r.annB||0) + ' annonce(s)';
+
+    pendingApply = ()=> {
+      r.trA = ptsA; r.trB = ptsB;
+      recomputeTotals(); save(); refresh(); renderHistory();
+      finalizeRound(); // avance la manche uniquement quand des points sont validés
+    };
+
+    cpModal.classList.add('show');
+  }
+  byId('cpCancel').addEventListener('click', ()=>{ pendingApply=null; cpModal.classList.remove('show'); });
+  byId('cpOk').addEventListener('click', ()=>{ if(pendingApply) pendingApply(); cpModal.classList.remove('show'); });
+
+  function confirmTricks(side, val){
+    const n = Math.max(0, Math.min(state.roundTotal, parseInt(val,10)||0));
+    openConfirm(side, n, 'points');
+  }
+
+  /* Annonces (confirmées, mais ne valident pas la manche) */
+  const aModal = byId('annonceModal');
+  const aTitle = byId('aTitle'); const aVal = byId('aGaugeVal'); const aRange = byId('aRange');
+  let aSide = 'A';
+
+  const caModal = byId('confirmAnnounce');
+  const caTeam = byId('caTeam'); const caVal = byId('caVal');
+  let pendingAnnApply = null;
+
+  function openConfirmAnnounce(side, val){
+    caTeam.textContent = (side==='A'?state.teamAName:state.teamBName);
+    caVal.textContent = '+' + val;
+    pendingAnnApply = ()=>{
+      ensureRound(); // ne crée pas de nouvelle manche tant qu’il n’y a pas de points
+      const r = state.rounds[state.rounds.length-1];
+      if(side==='A'){ r.annA += val; } else { r.annB += val; }
+      recomputeTotals(); save(); refresh(); renderHistory();
+    };
+    caModal.classList.add('show');
+  }
+  byId('caCancel').addEventListener('click', ()=>{ pendingAnnApply=null; caModal.classList.remove('show'); });
+  byId('caOk').addEventListener('click', ()=>{ if(pendingAnnApply) pendingAnnApply(); caModal.classList.remove('show'); });
+
+  function openAnnonce(side){
+    aSide = side;
+    aTitle.textContent = 'Annonce - ' + (side==='A' ? state.teamAName : state.teamBName);
+    aRange.value = 10; aVal.textContent = '10';
+    aModal.classList.add('show');
+  }
+  byId('aMinus').addEventListener('click', ()=>{ let v=parseInt(aRange.value,10)||10; v=Math.max(10,v-10); aRange.value=v; aVal.textContent=v; });
+  byId('aPlus').addEventListener('click', ()=>{ let v=parseInt(aRange.value,10)||10; v=Math.min(300,v+10); aRange.value=v; aVal.textContent=v; });
+  aRange.addEventListener('input', ()=> aVal.textContent = aRange.value );
+  byId('aClose').addEventListener('click', ()=> aModal.classList.remove('show'));
+  byId('aOk').addEventListener('click', ()=>{
+    const v = parseInt(aRange.value,10)||0;
+    aModal.classList.remove('show');
+    openConfirmAnnounce(aSide, v);
+  });
+  aModal.addEventListener('click', e=>{ if(e.target===aModal) aModal.classList.remove('show'); });
+
+  /* Clavier (points / objectif) */
+  const kModal = byId('keypad');
+  const kTitle = byId('kTitle'); const kDisp = byId('kDisp'); const kGrid = byId('kGrid');
+  const kHint = byId('kHint'); const kMatchBtn = byId('kMatch');
+  let kSide = 'A'; let kMax = 157; let kResolve = null;
+
+  function openKeypad(title, initial, onOk, opts){
+    kMax = (opts && typeof opts.max==='number') ? opts.max : 157;
+    const showHint = !opts || opts.showHint!==false;
+    const showMatch = !!(opts && opts.showMatch);
+
+    kTitle.textContent = title;
+    const init = Math.max(0, Math.min(kMax, parseInt(initial,10)||0));
+    kDisp.textContent = String(init);
+    kDisp.classList.remove('warn');
+
+    kHint.style.display = showHint ? '' : 'none';
+    kMatchBtn.style.display = showMatch ? '' : 'none';
+
+    kResolve = onOk;
+    kModal.classList.add('show');
+  }
+  byId('kCancel').addEventListener('click', ()=>{ kResolve=null; kModal.classList.remove('show'); });
+  byId('kOk').addEventListener('click', ()=>{
+    const n = parseInt(kDisp.textContent,10)||0;
+    if(n>kMax){ kDisp.classList.add('warn'); return; }
+    const fn = kResolve; kResolve=null; kModal.classList.remove('show'); if(fn) fn(n);
+  });
+
+  kMatchBtn.addEventListener('click', ()=>{
+    kModal.classList.remove('show');
+    const isA = kTitle.textContent.includes(state.teamAName);
+    kSide = isA ? 'A' : 'B';
+    openConfirm(kSide, 257, 'match');
+  });
+
+  kGrid.addEventListener('click', (e)=>{
+    const b = e.target.closest('.key'); if(!b) return;
+    const special = b.getAttribute('data-k');
+    let cur = kDisp.textContent.trim();
+    if(special==='C'){ kDisp.textContent='0'; kDisp.classList.remove('warn'); return; }
+    if(special==='B'){ kDisp.textContent = (cur.length<=1) ? '0' : cur.slice(0,-1); kDisp.classList.remove('warn'); return; }
+    const d = b.textContent.trim();
+    if(cur==='0') cur='';
+    const next = (cur + d).replace(/[^\d]/g,'');
+    const num = parseInt(next||'0',10);
+    if(num>kMax){ kDisp.classList.add('warn'); return; }
+    kDisp.classList.remove('warn');
+    kDisp.textContent = String(num);
+  });
+
+  /* Historique */
+  const historyM = byId('history'); const hList = byId('hList');
+  byId('historyBtn').addEventListener('click', ()=>{ renderHistory(); historyM.classList.add('show'); });
+  byId('hClose').addEventListener('click', ()=> historyM.classList.remove('show'));
+
+  function lastActiveIndex(){
+    for(let i=state.rounds.length-1;i>=0;i--){
+      const r = state.rounds[i];
+      if(!r || r.disabled) continue;
+      if((r.trA||0)||(r.trB||0)||(r.annA||0)||(r.annB||0)) return i;
+    }
+    return -1;
+  }
+
+  function renderHistory(){
+    hTeamAName.textContent = state.teamAName;
+    hTeamBName.textContent = state.teamBName;
+
+    hList.innerHTML='';
+    const lastIdx = lastActiveIndex();
+    const rows = [...state.rounds].map((r,i)=>({r,i})).reverse();
+    rows.forEach(({r})=>{
+      if(!r) return;
+      if(!r.trA && !r.trB && !r.annA && !r.annB) return;
+      const idx = state.rounds.findIndex(x=>x && x.num===r.num);
+      const card=document.createElement('div'); card.className='manche-card'+(r.disabled?' disabled':'');
+      card.innerHTML=`
+        <div class="side"><span>${(r.trA||0)}</span><span class="badge">+${(r.annA||0)} ann.</span></div>
+        <div class="manche-title">Manche ${r.num}</div>
+        <div class="side"><span class="badge">+${(r.annB||0)} ann.</span><span>${(r.trB||0)}</span></div>
+      `;
+      const canToggle = (idx===lastIdx) || r.disabled;
+      if(canToggle){
+        card.style.cursor='pointer';
+        card.title = r.disabled ? 'Réactiver cette manche' : 'Désactiver cette manche';
+        card.addEventListener('click', ()=>{
+          r.disabled = !r.disabled;
+          recomputeTotals(); save(); refresh(); renderHistory();
+        });
+      }
+      hList.appendChild(card);
+    });
+  }
+
+  /* Paramètres / Reset */
+  byId('settingsBtn').addEventListener('click', ()=> byId('settings').classList.add('show'));
+  byId('sClose').addEventListener('click', ()=> byId('settings').classList.remove('show'));
+
+  byId('resetBtn').addEventListener('click', ()=> byId('confirmReset').classList.add('show'));
+  byId('crCancel').addEventListener('click', ()=> byId('confirmReset').classList.remove('show'));
+  byId('crOk').addEventListener('click', ()=>{
+    try{ localStorage.removeItem('cc_state_pwa'); }catch{}
+    if('caches' in window){ caches.keys().then(keys=>keys.forEach(k=>caches.delete(k))); }
+    if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())); }
+    location.reload();
+  });
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
+  }
+})();
+</script>
+<script id="standalone-no-zoom">
+(function(){
+  const vp = document.querySelector('meta[name="viewport"]');
+  if(!vp) return;
+  const base = 'width=device-width, initial-scale=1, viewport-fit=cover';
+  const standalone = window.matchMedia('(display-mode: standalone)');
+  function setZoom(disable){
+    vp.setAttribute('content', disable ? base + ', maximum-scale=1, user-scalable=no' : base);
+  }
+  function apply(){ setZoom(standalone.matches); }
+  apply();
+  standalone.addEventListener?.('change', apply);
+})();
+</script>
+</body>
+</html>
