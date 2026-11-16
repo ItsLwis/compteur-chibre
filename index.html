@@ -6,160 +6,75 @@
   <title>Compteur Chibre</title>
   <meta name="description" content="Compteur de points pour le Jass/Chibre. Hors-ligne, installable, simple.">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#080909" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
   <style>
-    :root{
-      --bg:#000; --ink:#fff; --line:#2a2a2a; --center:#fff; --accent:#22c55e;
-      --card:#111; --card2:#171717; --danger:#ef4444;
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;min-height:100svh;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Helvetica,Arial,sans-serif}
-    .wrap{max-width:520px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom))}
+:root{color-scheme:dark;--bg:#080909;--ink:#f5f6f3;--line:#292d2b;--accent:#bcf582;--card:#141715;--danger:#ff8585}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100svh}
+button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}button:active{transform:scale(.97)}button:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.wrap{max-width:620px;margin:auto;padding:calc(26px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;gap:12px;align-items:center}.brand img{width:44px;height:44px}.brand h1{font-size:21px;letter-spacing:-.8px;margin:0}.eyebrow{font-size:10px;letter-spacing:2px;color:#939d96;text-transform:uppercase;margin-bottom:5px}.actions{display:flex;gap:6px}.iconbtn{width:42px;height:42px;background:#141715;border:1px solid var(--line);border-radius:14px;color:#c4ccc6;display:grid;place-items:center}.iconbtn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6}
+.intro{display:flex;justify-content:space-between;align-items:center;margin:30px 0 18px;font-size:12px;color:#959e98}.live{display:flex;align-items:center;gap:7px}.live:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.board{display:flex;flex-direction:column;gap:14px}.teamcard{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:24px;padding:22px;background:linear-gradient(125deg,#191e1a,#111412)}.teamcard.second{background:linear-gradient(125deg,#1c1d1b,#121412)}.teamtop{display:flex;justify-content:space-between;align-items:center}.teamidentity{display:flex;align-items:center;gap:10px;min-width:0}.suit{color:var(--accent);font-size:24px}.second .suit{color:#e6e7d9}.teamlabel{font-size:13px;letter-spacing:1.4px;font-weight:650;max-width:300px;overflow-wrap:anywhere;border-bottom:1px dashed #485048;min-width:50px}.teamnumber{font-size:10px;color:#838e86;letter-spacing:1.5px}.scoreline{display:flex;align-items:baseline;gap:10px;margin:18px 0 14px}.scoreTag{font-size:clamp(56px,15vw,76px);font-weight:650;letter-spacing:-4px;line-height:1.1;font-variant-numeric:tabular-nums}.unit{font-size:12px;color:#8f9991}.remain{font-size:12px;color:#b0bab2;margin-left:auto;letter-spacing:0;text-align:right}.track{height:6px;background:#30372f;border-radius:8px;overflow:hidden;margin-bottom:20px}.gauge{height:100%;width:0;background:var(--accent);border-radius:8px;transition:width .65s cubic-bezier(.2,.7,.2,1)}.second .gauge{background:#e0e5ce}.teamactions{display:grid;grid-template-columns:1fr 1.8fr;gap:10px}.btn,.plusbtn{min-height:46px;border:1px solid #343c34;background:#202620;color:var(--ink);border-radius:14px;padding:11px 14px;font-weight:550;font-size:13px;transition:transform .15s,background .15s}.plusbtn{background:var(--accent);border-color:var(--accent);color:#16210d}.second .plusbtn{background:#e0e5ce;border-color:#e0e5ce}.plusbtn b{font-size:20px;margin-right:8px;font-weight:400}.matchbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 6px}.stat{font-size:12px;color:#98a299}.target{border:1px solid var(--line);background:#151a15;color:var(--ink);border-radius:99px;padding:10px 18px;font-size:13px}.target:before{content:'Objectif · ';color:#96a08f}.target:after{content:' ↗';color:var(--accent)}.target.win{background:var(--accent);color:#14200d}.target.win:before,.target.win:after{color:#24351c}.footnote{text-align:center;color:#778279;font-size:11px;line-height:1.8;margin:22px 0 0}.footnote span{color:#a6afa8}
+.modal{position:fixed;inset:0;background:#000a;backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:18px;z-index:30}.modal.show{display:flex}.sheet{width:100%;max-width:480px;max-height:90svh;overflow:auto;background:#141815;border:1px solid #343c35;border-radius:26px;box-shadow:0 24px 100px #0008;animation:enter .2s ease-out}.sheet header{padding:22px 22px 16px;border-bottom:1px solid var(--line)}.sheet h3{font-size:17px;margin:0;letter-spacing:-.3px}.content{padding:20px}.display{font-size:64px;text-align:center;font-weight:600;letter-spacing:-2px;margin:6px 0}.hint{font-size:12px;color:#9fa99f;text-align:center;margin:8px 0 20px}.keypad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.key{background:#202620;border:1px solid #303930;border-radius:15px;padding:15px 0;font-size:23px;color:var(--ink)}.bar{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}.bar .btn{flex:1}button[id$="Ok"]{background:var(--accent);border-color:var(--accent);color:#172310}.btn.match{border-color:#8ca677;color:#d7edbd}.display.warn{outline:2px solid var(--danger);border-radius:15px}.confirmGrid{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}.sideBox{background:#1e251f;border:1px solid var(--line);padding:16px 10px;border-radius:16px;text-align:center;overflow-wrap:anywhere}.sideBox .big{font-size:34px;margin:8px 0;font-weight:650}.team,.ann{font-size:12px}.ann{color:#a4b29f}.vs{font-size:10px;color:#8e9a8d}.centerBox{max-width:260px;margin:auto}.historyHeader{display:flex;justify-content:space-between;margin-bottom:14px;gap:12px}#hList{display:grid;gap:10px}#hList:empty:before{content:'La partie commence ici. Vos manches apparaîtront après la première annonce ou les premiers points.';font-size:14px;color:#9eaa9e;line-height:1.7;padding:24px 0}.manche-card{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;background:#202620;border:1px solid #343c34;border-radius:14px;padding:14px 10px}.manche-title{font-size:11px;color:#a8b3a5}.side{display:flex;gap:5px;align-items:center;justify-content:space-between;font-size:18px;font-weight:650}.badge{font-size:9px;color:#b7d6a0}.manche-card.disabled{opacity:.45;text-decoration:line-through}.content ol{font-size:13px;line-height:1.7}input[type=range]{accent-color:var(--accent);min-height:44px}.centerline,.midmark{display:none}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:480px){.wrap{padding-left:16px;padding-right:16px}.brand h1{font-size:19px}.brand img{width:36px;height:36px}.eyebrow{font-size:8px}.iconbtn{width:38px;height:40px}.teamcard{padding:20px}.intro{margin-top:24px}.modal{align-items:flex-end;padding:8px 8px calc(8px + env(safe-area-inset-bottom))}.sheet{border-radius:24px;max-height:94svh}.teamlabel{max-width:210px}.content>div[style*="grid-template-columns"]{grid-template-columns:1fr!important;gap:18px!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-    .brand h1{margin:0;font-size:18px}
-    .actions{display:flex;gap:8px}
-    .iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#0e0e0e;color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-    .iconbtn:active{filter:brightness(.8)}
-    .iconbtn.danger{background:#180c0c;border-color:#3a1717}
-
-    /* Feedback gris à l’appui pour TOUT */
-    .btn:active,.iconbtn:active,.plusbtn:active,.key:active{filter:brightness(0.75)}
-
-    /* ====== Plateau ====== */
-    .board{position:relative;border:1px solid #1a1a1a;border-radius:14px;padding:14px;min-height:72vh;background:linear-gradient(180deg,#0a0a0a,#0f0f0f)}
-    .centerline{position:absolute;left:50%;top:10%;bottom:10%;transform:translateX(-50%);width:6px;background:var(--center);border-radius:3px}
-    .midmark{position:absolute;left:10%;right:10%;top:50%;height:1px;background:var(--line)}
-    .gauge{position:absolute;left:50%;transform:translateX(-50%);width:6px;background:var(--accent);border-radius:3px}
-    .gauge.top{top:10%;height:0}
-    .gauge.bottom{bottom:10%;height:0}
-
-    /* ====== OBJECTIF (taille d’ORIGINE) ====== */
-    .target{
-      font-variant-numeric:tabular-nums;
-      width:120px;
-      text-align:center;
-      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-      background:#0e0e0e;border-radius:50px;
-      padding:10px 16px;            /* valeurs d'origine */
-      border:1px solid #2a2a2a;font-weight:800;cursor:pointer;
-      font-size:22px;               /* valeurs d'origine */
-    }
-    .target.win{background:var(--accent);border-color:var(--accent);color:#000}
-
-    .ecartA,.roundCount{position:absolute;font-size:12px;opacity:.95;font-style:italic}
-    .ecartA{left:14px;top:46%;}
-    .roundCount{right:14px;top:46%;text-align:right}
-
-    .stackA{position:absolute;left:10%;top:18%;display:flex;flex-direction:column;gap:12px;align-items:center}
-    .stackB{position:absolute;right:10%;bottom:18%;display:flex;flex-direction:column;gap:12px;align-items:center}
-    .teamlabel{font-style:italic;font-weight:800;opacity:.95}
-    .plusbtn{border:1px solid #2a2a2a;background:#0e0e0e;color:#fff;border-radius:50%;width:58px;height:58px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900}
-    .btn{border:1px solid #2a2a2a;background:#0e0e0e;color:#fff;border-radius:12px;padding:8px 14px;cursor:pointer;font-weight:600}
-
-    .scoreTag{position:absolute;left:50%;transform:translateX(-50%);background:#0e0e0e;border-radius:999px;padding:6px 10px;border:1px solid #e5e7eb;font-weight:700;min-width:70px;text-align:center}
-    #scoreA{top: calc(10% - 12px);}
-    #scoreB{bottom: calc(10% - 12px);}
-    .remainTop{position:absolute;left:50%;transform:translateX(-50%);top: calc(10% - 34px);font-size:12px;font-style:italic;opacity:.9}
-    .remainBottom{position:absolute;left:50%;transform:translateX(-50%);bottom: calc(10% - 34px);font-size:12px;font-style:italic;opacity:.9}
-
-    /* ====== Modales ====== */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:14px;z-index:30}
-    .modal.show{display:flex}
-    .sheet{background:var(--card);border:1px solid #333;border-radius:16px;max-width:520px;width:100%}
-    .sheet header{padding:12px 14px;border-bottom:1px solid #262626}
-    .sheet h3{margin:0;font-size:16px;text-align:center}
-    .sheet .content{padding:14px}
-
-    /* ====== Clavier (keypad) ====== */
-    .display{font-size:46px;text-align:center;margin:8px 0 12px;font-weight:800;letter-spacing:1px}
-    .hint{font-size:12px;text-align:center;opacity:.75;margin:4px 0 10px}
-    .keypad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .key{background:#0b0b0b;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:16px 0;font-size:22px;font-weight:800;cursor:pointer;user-select:none}
-    .bar{display:flex;gap:8px;justify-content:space-between;margin-top:12px}
-    .bar .btn{flex:1}
-    .btn.match{background:#1f2937;border-color:#374151}
-    .display.warn{outline:2px solid var(--danger); border-radius:10px}
-
-    /* ====== Confirmation points / match ====== */
-    .confirmGrid{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
-    .sideBox{background:#0e0e0e;border:1px solid #2a2a2a;border-radius:12px;padding:10px;text-align:center}
-    .sideBox .team{font-weight:700;opacity:.9;margin-bottom:4px}
-    .sideBox .big{font-size:28px;font-weight:900}
-    .sideBox .ann{font-size:12px;opacity:.85;margin-top:2px}
-    .vs{opacity:.6;font-weight:700}
-
-    /* ====== Confirmation d’annonce ====== */
-    .centerBox{max-width:260px;margin:0 auto}
-
-    /* ====== Historique ====== */
-    .historyHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-    .historyHeader .team{font-weight:800;opacity:.95}
-    #hList{display:flex;flex-direction:column;gap:10px}
-    .manche-card{border:1px solid #333;border-radius:10px;padding:10px 12px;background:#1a1a1a;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
-    .manche-title{text-align:center;font-weight:800;opacity:.95}
-    .side{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:18px;font-weight:800}
-    .badge{font-size:12px;opacity:.85;border:1px solid #2e6f2e;border-radius:999px;padding:2px 6px}
-    .manche-card.disabled{background:#2a0000;border-color:#5a0000;color:#ffbdbd;text-decoration:line-through}
-  </style>
-<style id="navbar-fix">
-  html, body { background: #000000; margin: 0; height: 100%; }
-  /* Assure que le fond couvre la zone du geste système */
-  body { padding-bottom: env(safe-area-inset-bottom); }
+/* Un seul écran, adapté à la hauteur réellement disponible. Les panneaux restent défilables. */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+.wrap{height:100svh;height:100dvh;max-height:960px;display:flex;flex-direction:column;gap:12px;padding:calc(16px + env(safe-area-inset-top)) 16px calc(12px + env(safe-area-inset-bottom));min-height:0}
+.wrap>header{flex-shrink:0}.intro{margin:2px 2px 0;flex-shrink:0}.board{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);gap:12px}
+.teamcard{min-height:0;padding:clamp(12px,2dvh,22px);display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+.teamtop{min-height:24px}.teamidentity{overflow:hidden}.teamlabel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}.scoreline{margin:0;gap:10px;min-height:0}.scoreTag{font-size:clamp(44px,9dvh,76px);letter-spacing:-2px}.unit{display:flex;flex-direction:column;gap:4px;font-size:11px}.pending-note{font-size:10px;color:var(--accent);white-space:nowrap}.second .pending-note{color:#e0e5ce}.remain{font-size:11px}.track{flex-shrink:0;margin:0;height:8px}.gauge{position:relative;overflow:hidden}.gauge:after{content:'';position:absolute;inset:0 0 0 auto;width:var(--pending-share,0%);background:repeating-linear-gradient(135deg,#17231070 0 3px,transparent 3px 6px);transition:width .5s}
+.teamactions{flex-shrink:0}.teamactions .btn,.teamactions .plusbtn{min-height:44px;padding:10px 8px;font-size:12px}.teamactions .plusbtn b{font-size:17px;margin-right:5px}.target{min-height:40px;padding:10px 14px;font-size:12px}.matchbar{padding:0 2px}.stat{font-size:11px;white-space:nowrap}.footnote{font-size:10px;line-height:1.3;margin:0;flex-shrink:0}
+.announce-help{font-size:12px;color:#a7b2a7;line-height:1.6;margin:0 0 14px}.reset-status{font-size:12px;color:#a7b2a7;line-height:1.6;margin:10px 0 0}
+@media(max-height:700px){.wrap{gap:8px;padding-top:calc(10px + env(safe-area-inset-top));padding-bottom:calc(10px + env(safe-area-inset-bottom))}.board{gap:8px}.teamcard{padding:12px;gap:6px;border-radius:20px}.scoreTag{font-size:clamp(40px,8.5dvh,58px)}.teamtop{min-height:22px}.suit{font-size:21px}.intro{font-size:10px}.footnote{display:none}}
+@media(max-height:590px){.intro{display:none}.wrap>header .eyebrow{display:none}.wrap>header .brand h1{font-size:17px}.brand img{width:32px;height:32px}.teamcard{gap:4px}.scoreTag{font-size:44px}.teamtop{min-height:20px}}
+@media(max-width:350px){.wrap{padding-left:10px;padding-right:10px}.brand{gap:6px}.brand h1{font-size:17px}.brand img{width:30px;height:30px}.iconbtn{width:34px;height:38px}.actions{gap:4px}.teamlabel{max-width:200px}.target{padding:8px 10px}.target:after{content:''}.unit{font-size:10px}.remain{max-width:68px}.pending-note{font-size:9px}}
+@media(orientation:landscape) and (max-height:550px){.wrap{max-width:1000px;gap:8px;padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:calc(8px + env(safe-area-inset-bottom));padding-left:calc(12px + env(safe-area-inset-left));padding-right:calc(12px + env(safe-area-inset-right))}.intro,.footnote{display:none}.board{grid-template-columns:1fr 1fr;grid-template-rows:auto minmax(0,1fr);gap:8px}.matchbar{grid-column:1/-1;grid-row:1;justify-content:center;gap:30px}.teamcard{grid-row:2;padding:10px;gap:3px}.target{min-height:32px;padding:6px 14px}.scoreTag{font-size:40px}.teamactions .btn,.teamactions .plusbtn{min-height:40px;padding:8px 6px}.teamtop{min-height:20px}}
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <main class="wrap">
     <header>
-      <div class="brand"><h1>Compteur Chibre</h1></div>
-      <div class="actions">
-        <button class="iconbtn" id="settingsBtn" title="Paramètres">⚙️</button>
-        <button class="iconbtn" id="historyBtn" title="Historique">🕘</button>
-        <button class="iconbtn danger" id="resetBtn" title="Tout réinitialiser">🗑️</button>
-      </div>
+      <div class="brand"><img src="icons/logo.svg" alt=""><div><div class="eyebrow">À vous de jouer</div><h1>Compteur Chibre<span style="color:var(--accent)">.</span></h1></div></div>
+      <nav class="actions" aria-label="Outils de la partie">
+        <button class="iconbtn" id="historyBtn" aria-label="Historique" title="Historique"><svg viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 2 7M3 4v7h7M12 7v5l3 2"/></svg></button>
+        <button class="iconbtn" id="settingsBtn" aria-label="Paramètres et installation" title="Paramètres"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#141715"/><circle cx="15" cy="17" r="3" fill="#141715"/></svg></button>
+        <button class="iconbtn" id="resetBtn" aria-label="Recommencer la partie" title="Nouvelle partie"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 10v7M14 10v7"/></svg></button>
+      </nav>
     </header>
-
-    <!-- ====== Plateau ====== -->
+    <div class="intro"><span class="live">La table est à vous</span><span>JASS / CHIBRE</span></div>
     <div class="board" id="board">
-      <div class="centerline"></div>
-      <div id="gTop" class="gauge top"></div>
-      <div id="gBot" class="gauge bottom"></div>
-      <div class="midmark"></div>
-
-      <div id="target" class="target">1000</div>
-
-      <div id="ecartA" class="ecartA">Écart : 0</div>
-      <div id="roundCount" class="roundCount">Manche : 1</div>
-
-      <div class="stackA">
-        <div class="teamlabel" id="teamAName" contenteditable="true">TEAM 1</div>
-        <button class="plusbtn" data-act="plusA">+</button>
-        <button class="btn" data-act="annonceA">Annonce</button>
-      </div>
-      <div class="stackB">
-        <button class="btn" data-act="annonceB">Annonce</button>
-        <button class="plusbtn" data-act="plusB">+</button>
-        <div class="teamlabel" id="teamBName" contenteditable="true">TEAM 2</div>
-      </div>
-
-      <div id="scoreA" class="scoreTag">0</div>
-      <div id="remainTop" class="remainTop">(-0)</div>
-      <div id="scoreB" class="scoreTag">0</div>
-      <div id="remainBottom" class="remainBottom">(-0)</div>
+      <section class="teamcard" aria-label="Première équipe">
+        <div class="teamtop"><div class="teamidentity"><span class="suit" aria-hidden="true">♠</span><div class="teamlabel" id="teamAName" contenteditable="true" role="textbox" aria-label="Nom de la première équipe" spellcheck="false">TEAM 1</div></div><span class="teamnumber">01</span></div>
+        <div class="scoreline"><span id="scoreA" class="scoreTag" aria-live="polite">0</span><span class="unit">points<span id="pendingA" class="pending-note"></span></span><span id="remainTop" class="remain"></span></div>
+        <div class="track"><div id="gTop" class="gauge"></div></div>
+        <div class="teamactions"><button class="btn" data-act="annonceA">Annonce</button><button class="plusbtn" data-act="plusA"><b>+</b> Ajouter des points</button></div>
+      </section>
+      <div class="matchbar"><span id="roundCount" class="stat">Manche : 1</span><button id="target" class="target" aria-label="Modifier l’objectif">1000</button><span id="ecartA" class="stat">Écart : 0</span></div>
+      <section class="teamcard second" aria-label="Deuxième équipe">
+        <div class="teamtop"><div class="teamidentity"><span class="suit" aria-hidden="true">♣</span><div class="teamlabel" id="teamBName" contenteditable="true" role="textbox" aria-label="Nom de la deuxième équipe" spellcheck="false">TEAM 2</div></div><span class="teamnumber">02</span></div>
+        <div class="scoreline"><span id="scoreB" class="scoreTag" aria-live="polite">0</span><span class="unit">points<span id="pendingB" class="pending-note"></span></span><span id="remainBottom" class="remain"></span></div>
+        <div class="track"><div id="gBot" class="gauge"></div></div>
+        <div class="teamactions"><button class="btn" data-act="annonceB">Annonce</button><button class="plusbtn" data-act="plusB"><b>+</b> Ajouter des points</button></div>
+      </section>
     </div>
-  </div>
+    <p class="footnote">Noms modifiables · Une seule partie sauvegardée</p>
+  </main>
 
   <!-- ====== Modale Annonce ====== -->
   <div class="modal" id="annonceModal">
     <div class="sheet">
       <header><h3 id="aTitle">Annonce</h3></header>
       <div class="content" style="text-align:center">
-        <div id="aGaugeVal" style="font-size:42px;margin:8px 0">10</div>
-        <input id="aRange" type="range" min="10" max="300" step="10" value="10" style="width:100%">
+        <p class="announce-help">Total des annonces de cette manche. Modifiable jusqu’à la validation des points. Mettez 0 pour les retirer.</p><div id="aGaugeVal" style="font-size:42px;margin:8px 0">10</div>
+        <input aria-label="Points d’annonce" id="aRange" type="range" min="0" max="300" step="10" value="10" style="width:100%">
         <div class="bar">
           <button class="btn" id="aMinus">-10</button>
           <button class="btn" id="aPlus">+10</button>
@@ -218,23 +133,6 @@
     </div>
   </div>
 
-  <!-- ====== Modale Confirmation Annonce ====== -->
-  <div class="modal" id="confirmAnnounce">
-    <div class="sheet">
-      <header><h3>Confirmer l’annonce</h3></header>
-      <div class="content">
-        <div class="sideBox centerBox">
-          <div class="team" id="caTeam">TEAM</div>
-          <div class="big" id="caVal">+0</div>
-        </div>
-        <div class="bar" style="margin-top:12px">
-          <button class="btn" id="caCancel">Annuler</button>
-          <button class="btn" id="caOk">Valider</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ====== Modale Historique ====== -->
   <div class="modal" id="history">
     <div class="sheet">
@@ -253,12 +151,12 @@
   <!-- ====== Modale Réinitialiser ====== -->
   <div class="modal" id="confirmReset">
     <div class="sheet">
-      <header><h3>Tout réinitialiser</h3></header>
+      <header><h3>Nouvelle partie ?</h3></header>
       <div class="content">
-        <p style="opacity:.9">Supprimer les scores, l’historique et vider le cache ?</p>
-        <div class="bar" style="justify-content:flex-end">
+        <p style="opacity:.9">Remettre les scores, les annonces et l’historique de cette partie à zéro ?</p>
+        <p class="reset-status">Les noms d’équipe et l’objectif sont conservés. Vous pouvez continuer à jouer sans connexion.</p><div class="bar" style="justify-content:flex-end">
           <button class="btn" id="crCancel">Annuler</button>
-          <button class="btn" id="crOk" style="color:var(--danger)">Tout supprimer</button>
+          <button class="btn" id="crOk" style="color:var(--danger)">Recommencer</button>
         </div>
       </div>
     </div>
@@ -269,6 +167,8 @@
     <div class="sheet">
       <header><h3>Paramètres & Installation</h3></header>
       <div class="content">
+        <p class="announce-help">Pour un affichage sans barre de navigateur, installez le compteur puis ouvrez son icône depuis l’écran d’accueil.</p>
+        <p class="announce-help">Une seule partie est sauvegardée sur cet appareil, remplacée à chaque modification. La corbeille démarre une nouvelle partie sans archiver l’ancienne. Le compteur reste disponible hors ligne après son premier chargement complet.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
             <div style="font-weight:700;margin:8px 0 6px">iPhone / iPad</div>
@@ -299,7 +199,7 @@
   const $ = s => document.querySelector(s);
   const byId = id => document.getElementById(id);
 
-  const state = {
+  const freshState = () => ({
     target: 1000,
     roundTotal: 157,
     scoreA: 0,
@@ -307,10 +207,33 @@
     rounds: [],       // {num, trA, trB, annA, annB, disabled}
     teamAName: 'TEAM 1',
     teamBName: 'TEAM 2'
-  };
+  });
+  const state = freshState();
 
-  try{ const saved = localStorage.getItem('cc_state_pwa'); if(saved) Object.assign(state, JSON.parse(saved)); }catch{}
-  const save = ()=>{ try{ localStorage.setItem('cc_state_pwa', JSON.stringify(state)); }catch{} };
+  // Un seul instantané courant, jamais d’archive des parties terminées.
+  const GAME_KEY = 'cc_current_game_v2';
+  function save() {
+    const snapshot = JSON.stringify(state);
+    try {
+      localStorage.setItem(GAME_KEY, snapshot);
+      try { sessionStorage.removeItem('cc_session_v2'); } catch {}
+    } catch {
+      // Repli si le navigateur interdit le stockage persistant.
+      try { sessionStorage.setItem('cc_session_v2', snapshot); } catch {}
+    }
+  }
+  let saved = null;
+  try { saved = localStorage.getItem(GAME_KEY); } catch {}
+  if (!saved) { try { saved = sessionStorage.getItem('cc_session_v2'); } catch {} }
+  if (!saved) { try { saved = localStorage.getItem('cc_state_pwa'); } catch {} }
+  try {
+    const parsed = JSON.parse(saved || 'null');
+    if (parsed && Array.isArray(parsed.rounds) && Number.isFinite(parsed.target) && parsed.target > 0) {
+      Object.assign(state, parsed);
+      save();
+    }
+  } catch {}
+  try { localStorage.removeItem('cc_state_pwa'); } catch {}
 
   const gTop = byId('gTop'), gBot = byId('gBot');
   const scoreAEl = byId('scoreA'), scoreBEl = byId('scoreB');
@@ -339,28 +262,40 @@
     return state.rounds.filter(r => r && !r.disabled && ((r.trA||0) > 0 || (r.trB||0) > 0)).length;
   }
 
-  function refresh(){
-    const usable = 80;
-    const aPct = Math.min(1, state.scoreA / state.target);
-    const bPct = Math.min(1, state.scoreB / state.target);
-    gTop.style.height = (aPct * usable/2) + '%';
-    gBot.style.height = (bPct * usable/2) + '%';
-
-    scoreAEl.textContent = state.scoreA;
-    scoreBEl.textContent = state.scoreB;
-    targetEl.textContent = state.target;
-
-    const remA = Math.max(0, state.target - state.scoreA);
-    const remB = Math.max(0, state.target - state.scoreB);
-    remainTop.textContent = '(-' + remA + ')';
-    remainBottom.textContent = '(-' + remB + ')';
-    ecartA.textContent = 'Écart : ' + Math.abs(state.scoreA - state.scoreB);
-
-    /* Affiche la prochaine manche = manches validées + 1 */
-    roundCount.textContent = 'Manche : ' + (validatedRoundsCount() + 1);
-
-    targetEl.classList.toggle('win', state.scoreA>=state.target || state.scoreB>=state.target);
+  function pendingRound() {
+    const r = state.rounds[state.rounds.length - 1];
+    return r && !r.disabled && !(r.trA || r.trB) ? r : null;
   }
+  function refresh(){
+    const pending = pendingRound();
+    const annA = pending?.annA || 0, annB = pending?.annB || 0;
+    const totalA = state.scoreA + annA, totalB = state.scoreB + annB;
+    for (const [side, total, confirmed, ann, gauge] of [
+      ['A', totalA, state.scoreA, annA, gTop], ['B', totalB, state.scoreB, annB, gBot]
+    ]) {
+      const visible = Math.min(state.target, total);
+      const provisional = Math.max(0, visible - Math.min(state.target, confirmed));
+      gauge.style.width = (Math.min(1, total / state.target) * 100) + '%';
+      gauge.style.setProperty('--pending-share', (visible ? provisional / visible * 100 : 0) + '%');
+      const track = gauge.parentElement;
+      track.setAttribute('role', 'progressbar');
+      track.setAttribute('aria-label', 'Progression de ' + (side === 'A' ? state.teamAName : state.teamBName));
+      track.setAttribute('aria-valuemin', '0'); track.setAttribute('aria-valuemax', state.target);
+      track.setAttribute('aria-valuenow', Math.min(total, state.target));
+      track.setAttribute('aria-valuetext', total + ' points, dont ' + ann + ' d’annonce en attente');
+      byId('pending' + side).textContent = ann ? 'dont ' + ann + ' en attente' : '';
+      document.querySelector('[data-act="annonce' + side + '"]').textContent = ann ? 'Annonce · ' + ann : 'Annonce';
+    }
+    scoreAEl.textContent = totalA; scoreBEl.textContent = totalB;
+    targetEl.textContent = state.target;
+    remainTop.textContent = Math.max(0, state.target - totalA) + ' restants';
+    remainBottom.textContent = Math.max(0, state.target - totalB) + ' restants';
+    ecartA.textContent = 'Écart : ' + Math.abs(totalA - totalB);
+    roundCount.textContent = 'Manche : ' + (validatedRoundsCount() + 1);
+    // La victoire est confirmée avec les points ; l’annonce reste modifiable avant cela.
+    targetEl.classList.toggle('win', state.scoreA >= state.target || state.scoreB >= state.target);
+  }
+  recomputeTotals();
   window.addEventListener('resize', refresh);
   refresh();
 
@@ -371,7 +306,7 @@
       state.rounds.push({num: 1, trA:0, trB:0, annA:0, annB:0, disabled:false});
       return;
     }
-    if ((last.trA||0) > 0 || (last.trB||0) > 0){
+    if (last.disabled || (last.trA||0) > 0 || (last.trB||0) > 0){
       state.rounds.push({num: state.rounds.length+1, trA:0, trB:0, annA:0, annB:0, disabled:false});
     }
   }
@@ -438,14 +373,14 @@
 
     pendingApply = ()=> {
       r.trA = ptsA; r.trB = ptsB;
-      recomputeTotals(); save(); refresh(); renderHistory();
-      finalizeRound(); // avance la manche uniquement quand des points sont validés
+      finalizeRound();
+      recomputeTotals(); save(); refresh(); renderHistory(); // clôture et persiste la manche une seule fois
     };
 
     cpModal.classList.add('show');
   }
   byId('cpCancel').addEventListener('click', ()=>{ pendingApply=null; cpModal.classList.remove('show'); });
-  byId('cpOk').addEventListener('click', ()=>{ if(pendingApply) pendingApply(); cpModal.classList.remove('show'); });
+  byId('cpOk').addEventListener('click', ()=>{ const apply = pendingApply; pendingApply = null; if(apply) apply(); cpModal.classList.remove('show'); });
 
   function confirmTricks(side, val){
     const n = Math.max(0, Math.min(state.roundTotal, parseInt(val,10)||0));
@@ -457,38 +392,32 @@
   const aTitle = byId('aTitle'); const aVal = byId('aGaugeVal'); const aRange = byId('aRange');
   let aSide = 'A';
 
-  const caModal = byId('confirmAnnounce');
-  const caTeam = byId('caTeam'); const caVal = byId('caVal');
-  let pendingAnnApply = null;
-
-  function openConfirmAnnounce(side, val){
-    caTeam.textContent = (side==='A'?state.teamAName:state.teamBName);
-    caVal.textContent = '+' + val;
-    pendingAnnApply = ()=>{
-      ensureRound(); // ne crée pas de nouvelle manche tant qu’il n’y a pas de points
-      const r = state.rounds[state.rounds.length-1];
-      if(side==='A'){ r.annA += val; } else { r.annB += val; }
-      recomputeTotals(); save(); refresh(); renderHistory();
-    };
-    caModal.classList.add('show');
-  }
-  byId('caCancel').addEventListener('click', ()=>{ pendingAnnApply=null; caModal.classList.remove('show'); });
-  byId('caOk').addEventListener('click', ()=>{ if(pendingAnnApply) pendingAnnApply(); caModal.classList.remove('show'); });
-
   function openAnnonce(side){
     aSide = side;
-    aTitle.textContent = 'Annonce - ' + (side==='A' ? state.teamAName : state.teamBName);
-    aRange.value = 10; aVal.textContent = '10';
+    const r = pendingRound();
+    const current = (side === 'A' ? r?.annA : r?.annB) || 0;
+    aTitle.textContent = 'Annonce - ' + (side === 'A' ? state.teamAName : state.teamBName);
+    aRange.max = String(Math.max(300, current));
+    aRange.value = String(current); aVal.textContent = String(current);
     aModal.classList.add('show');
   }
-  byId('aMinus').addEventListener('click', ()=>{ let v=parseInt(aRange.value,10)||10; v=Math.max(10,v-10); aRange.value=v; aVal.textContent=v; });
-  byId('aPlus').addEventListener('click', ()=>{ let v=parseInt(aRange.value,10)||10; v=Math.min(300,v+10); aRange.value=v; aVal.textContent=v; });
-  aRange.addEventListener('input', ()=> aVal.textContent = aRange.value );
+  byId('aMinus').addEventListener('click', ()=>{
+    const v = Math.max(0, (parseInt(aRange.value,10) || 0) - 10);
+    aRange.value = v; aVal.textContent = v;
+  });
+  byId('aPlus').addEventListener('click', ()=>{
+    const v = Math.min(Number(aRange.max), (parseInt(aRange.value,10) || 0) + 10);
+    aRange.value = v; aVal.textContent = v;
+  });
+  aRange.addEventListener('input', ()=> aVal.textContent = aRange.value);
   byId('aClose').addEventListener('click', ()=> aModal.classList.remove('show'));
   byId('aOk').addEventListener('click', ()=>{
-    const v = parseInt(aRange.value,10)||0;
+    ensureRound();
+    const r = pendingRound();
+    const v = Math.max(0, Math.min(Number(aRange.max), parseInt(aRange.value,10) || 0));
+    if(r) r[aSide === 'A' ? 'annA' : 'annB'] = v; // remplace le total, sans cumul accidentel
+    recomputeTotals(); save(); refresh(); renderHistory();
     aModal.classList.remove('show');
-    openConfirmAnnounce(aSide, v);
   });
   aModal.addEventListener('click', e=>{ if(e.target===aModal) aModal.classList.remove('show'); });
 
@@ -523,8 +452,6 @@
 
   kMatchBtn.addEventListener('click', ()=>{
     kModal.classList.remove('show');
-    const isA = kTitle.textContent.includes(state.teamAName);
-    kSide = isA ? 'A' : 'B';
     openConfirm(kSide, 257, 'match');
   });
 
@@ -564,17 +491,18 @@
     hList.innerHTML='';
     const lastIdx = lastActiveIndex();
     const rows = [...state.rounds].map((r,i)=>({r,i})).reverse();
-    rows.forEach(({r})=>{
+    rows.forEach(({r,i:idx})=>{
       if(!r) return;
       if(!r.trA && !r.trB && !r.annA && !r.annB) return;
-      const idx = state.rounds.findIndex(x=>x && x.num===r.num);
       const card=document.createElement('div'); card.className='manche-card'+(r.disabled?' disabled':'');
       card.innerHTML=`
         <div class="side"><span>${(r.trA||0)}</span><span class="badge">+${(r.annA||0)} ann.</span></div>
         <div class="manche-title">Manche ${r.num}</div>
         <div class="side"><span class="badge">+${(r.annB||0)} ann.</span><span>${(r.trB||0)}</span></div>
       `;
-      const canToggle = (idx===lastIdx) || r.disabled;
+      const hasPoints = !!(r.trA || r.trB);
+      const canToggle = hasPoints && ((idx===lastIdx) || r.disabled);
+      if(!hasPoints) card.querySelector(".manche-title").textContent = "En attente";
       if(canToggle){
         card.style.cursor='pointer';
         card.title = r.disabled ? 'Réactiver cette manche' : 'Désactiver cette manche';
@@ -594,10 +522,14 @@
   byId('resetBtn').addEventListener('click', ()=> byId('confirmReset').classList.add('show'));
   byId('crCancel').addEventListener('click', ()=> byId('confirmReset').classList.remove('show'));
   byId('crOk').addEventListener('click', ()=>{
-    try{ localStorage.removeItem('cc_state_pwa'); }catch{}
-    if('caches' in window){ caches.keys().then(keys=>keys.forEach(k=>caches.delete(k))); }
-    if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())); }
-    location.reload();
+    pendingApply = null; kResolve = null;
+    const preferences = { target: state.target, teamAName: state.teamAName, teamBName: state.teamBName };
+    Object.assign(state, freshState(), preferences);
+    // Remplace l’ancienne partie par l’état initial ; le cache de l’application reste intact.
+    save();
+    try { localStorage.removeItem('cc_state_pwa'); } catch {}
+    refresh(); renderHistory();
+    byId('confirmReset').classList.remove('show');
   });
 
   if('serviceWorker' in navigator){
@@ -605,19 +537,33 @@
   }
 })();
 </script>
-<script id="standalone-no-zoom">
-(function(){
-  const vp = document.querySelector('meta[name="viewport"]');
-  if(!vp) return;
-  const base = 'width=device-width, initial-scale=1, viewport-fit=cover';
-  const standalone = window.matchMedia('(display-mode: standalone)');
-  function setZoom(disable){
-    vp.setAttribute('content', disable ? base + ', maximum-scale=1, user-scalable=no' : base);
+
+<script>
+(() => {
+ const modals = [...document.querySelectorAll('.modal')];
+ let previous = null;
+ modals.forEach(m => {
+  m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
+  const title=m.querySelector('h3'); if(!title.id) title.id=m.id+'Title'; m.setAttribute('aria-labelledby',title.id);
+  new MutationObserver(records => {
+   const opened=m.classList.contains('show');
+   if(opened){previous=document.activeElement; document.querySelector('.wrap').inert=true; (m.querySelector('button,input')||m).focus();}
+   else if(!modals.some(x=>x.classList.contains('show'))){document.querySelector('.wrap').inert=false; previous?.focus();}
+  }).observe(m,{attributes:true,attributeFilter:['class']});
+ });
+ document.addEventListener('keydown',e=>{
+  const m=modals.find(x=>x.classList.contains('show')); if(!m)return;
+  if(e.key==='Escape'){m.classList.remove('show');return;}
+  if(e.key==='Tab'){
+   const all=[...m.querySelectorAll('button,input')].filter(x=>x.offsetParent!==null);
+   if(e.shiftKey&&document.activeElement===all[0]){e.preventDefault();all.at(-1).focus();}
+   else if(!e.shiftKey&&document.activeElement===all.at(-1)){e.preventDefault();all[0].focus();}
   }
-  function apply(){ setZoom(standalone.matches); }
-  apply();
-  standalone.addEventListener?.('change', apply);
+ });
+ document.querySelectorAll('[contenteditable]').forEach(el=>{
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}});
+  el.addEventListener('paste',e=>{e.preventDefault();const value=e.clipboardData.getData('text/plain').replace(/\s+/g,' ').slice(0,40);el.textContent=value;el.dispatchEvent(new Event('input'));});
+ });
 })();
-</script>
-</body>
+</script></body>
 </html>
